@@ -8,7 +8,7 @@ import torch.nn.functional as F
 from torch import Tensor
 from torchmetrics import Metric
 
-from src.tree_loss import generate_label_hierarchy
+from .tree_loss import generate_label_hierarchy
 
 
 class PatchedOptunaCallback(optuna.integration.PyTorchLightningPruningCallback, pytorch_lightning.Callback):

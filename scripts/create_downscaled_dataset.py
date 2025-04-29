@@ -7,7 +7,7 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 
-import src.gleason_data as gleason_data
+import gleasonxai.gleason_data as gleason_data
 
 
 def save_downscaled_TMAs(path_to_tmas: Union[str, Path], new_path_to_tmas: Union[str, Path], shorter_edge_length: int, file_format: str):

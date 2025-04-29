@@ -11,7 +11,7 @@ import seaborn as sns
 from scipy.stats import bootstrap, norm
 from statsmodels.stats import inter_rater as irr
 
-from src.gleason_data import GleasonX
+from gleasonxai.gleason_data import GleasonX
 
 label_mapping = {
     "compressed or angular discrete glands": 0,
@@ -192,7 +192,7 @@ def calculate_kappa_per_group_and_label(df: pd.DataFrame, out_path: Path, use_su
     plt.cla()
     plt.close()
 
-    print(f"Boxplot for label/group kappas")
+    print("Boxplot for label/group kappas")
     kappas_df.to_csv(out_path / f"{'expl' if use_sub_explanations==False else 'sub-expl' if use_sub_explanations == True else 'pattern'}_kappas.csv")
     np.save(
         out_path / f"{'expl' if use_sub_explanations==False else 'sub-expl' if use_sub_explanations == True else 'pattern'}_kappas_y-lables.npy", renamed_labels
@@ -323,31 +323,31 @@ def calculate_kappa_per_group_and_label(df: pd.DataFrame, out_path: Path, use_su
 
 def nan_replace_val(x):
     if math.isnan(x):
-        return f"-"
+        return "-"
     return f"{x:.3f}"
 
 
 def nan_replace_val_e(x):
     if math.isnan(x):
-        return f"-"
+        return "-"
     return f"{x:.3e}"
 
 
 def nan_replace_ci(x):
     if math.isnan(x[0]):
-        return f"[-,-]"
+        return "[-,-]"
     return f"[{x[0]:.3f}, {x[1]:.3f}]"
 
 
 def nan_replace_str_ci(x: str):
     if x.startswith("[na"):
-        return f"[-,-]"
+        return "[-,-]"
     return x
 
 
 def nan_replace_str_val(x: str):
     if x.startswith("na"):
-        return f"-"
+        return "-"
     return x
 
 

@@ -14,14 +14,14 @@ from matplotlib.colors import ListedColormap
 from torchmetrics import Accuracy, ConfusionMatrix, Dice
 from tqdm import tqdm
 
-import src.augmentations as augmentations
-from src.augmentations import (basic_transforms_val_test_scaling512,
+import gleasonxai.augmentations as augmentations
+from gleasonxai.augmentations import (basic_transforms_val_test_scaling512,
                                normalize_only_transform)
-from src.gleason_data import GleasonX
-from src.gleason_utils import create_composite_plot
-from src.jdt_losses import SoftDICECorrectAccuSemiMetric
-from src.model_utils import L1CalibrationMetric
-from src.tree_loss import generate_label_hierarchy
+from gleasonxai.gleason_data import GleasonX
+from gleasonxai.gleason_utils import create_composite_plot
+from gleasonxai.jdt_losses import SoftDICECorrectAccuSemiMetric
+from gleasonxai.model_utils import L1CalibrationMetric
+from gleasonxai.tree_loss import generate_label_hierarchy
 
 # VISUALISATIONS
 
@@ -304,7 +304,7 @@ def create_multi_seg_anno_plot(predictions, dataset, idcs, strip_background=Fals
 
     if legend:
         if strip_background:
-            legend_handels = [mpatches.Patch(color=np.array([0.0, 0.0, 0.0, 1.0]), label=f"Background")]
+            legend_handels = [mpatches.Patch(color=np.array([0.0, 0.0, 0.0, 1.0]), label="Background")]
             legend_handels += [
                 mpatches.Patch(
                     color=colormap(dataset.classes_number_mapping[cls] + 1), label=cls_renamed if len(cls_renamed) < 60 else cls_renamed[:60] + "..."

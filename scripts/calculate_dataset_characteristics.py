@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-from src.gleason_data import GleasonX
+from gleasonxai.gleason_data import GleasonX
 
 matplotlib.use("Agg")
 
@@ -133,7 +133,7 @@ def generate_matrix(co_occurrences_list: list, output_path: Path):
     ax.set_xlabel("")
     plt.title("Co-occurence of Classes")
     plt.tight_layout()
-    plt.savefig(output_path / f"cooccurence.png")
+    plt.savefig(output_path / "cooccurence.png")
     plt.cla()
     plt.clf()
     plt.close()
@@ -276,7 +276,7 @@ def plot_three_rater_agreement_occurrence(ca_dict: dict, processed_df: pd.DataFr
     plt.yticks(fontsize=16)
     ax.set_yticklabels(ax.get_yticklabels(), rotation="horizontal")
     plt.tight_layout()
-    plt.savefig(output_path / f"hm_three_labeling_agreement_occurences.svg", dpi=1000)
+    plt.savefig(output_path / "hm_three_labeling_agreement_occurences.svg", dpi=1000)
     plt.cla()
     plt.clf()
     plt.close()

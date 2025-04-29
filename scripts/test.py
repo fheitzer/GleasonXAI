@@ -14,10 +14,10 @@ from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import WandbLogger
 from torch.utils.data import DataLoader
 
-import src.augmentations as augmentations
-import src.model_utils as model_utils
-import src.tree_loss as tree_loss
-from src.lightning_modul import LitClassifier, LitSegmenter
+import gleasonxai.augmentations as augmentations
+import gleasonxai.model_utils as model_utils
+import gleasonxai.tree_loss as tree_loss
+from gleasonxai.lightning_modul import LitClassifier, LitSegmenter
 
 
 def test(
@@ -203,7 +203,7 @@ if __name__ == "__main__":
 
     args = parse.parse_args()
 
-    assert "DATASET_LOCATION" in os.environ, f"Environment variable DATASET_LOCATION not set!"
+    assert "DATASET_LOCATION" in os.environ, "Environment variable DATASET_LOCATION not set!"
     assert Path(os.environ["DATASET_LOCATION"]).exists(), f"DATASET_LOCATION {os.environ['DATASET_LOCATION']} does not exist!"
 
     checkpoint = Path(args.experiment_path) / Path(args.checkpoint)

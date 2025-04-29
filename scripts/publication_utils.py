@@ -1,4 +1,4 @@
-import src.gleason_data as gleason_data
+import gleasonxai.gleason_data as gleason_data
 
 
 def create_final_publication_dataset(path, split, label_level):

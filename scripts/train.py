@@ -10,10 +10,10 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 from torch.utils.data import DataLoader
 
-import src.augmentations as augmentations
-import src.tree_loss as tree_loss
-from src.lightning_modul import LitClassifier, LitSegmenter
-from src.model_utils import LabelRemapper, PatchedOptunaCallback
+import gleasonxai.augmentations as augmentations
+import gleasonxai.tree_loss as tree_loss
+from gleasonxai.lightning_modul import LitClassifier, LitSegmenter
+from gleasonxai.model_utils import LabelRemapper, PatchedOptunaCallback
 
 
 def train(cfg: DictConfig, trial=None):

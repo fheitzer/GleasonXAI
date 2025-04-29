@@ -11,9 +11,9 @@ from matplotlib.colors import ListedColormap
 from monai.inferers import SlidingWindowInferer
 from PIL import Image
 
-from src.augmentations import normalize_only_transform
-from src.gleason_utils import tissue_filter_image
-from src.lightning_modul import LitSegmenter
+from gleasonxai.augmentations import normalize_only_transform
+from gleasonxai.gleason_utils import tissue_filter_image
+from gleasonxai.lightning_modul import LitSegmenter
 
 CLASS_NUMBER_MAPPING = {
     "Benign": 0,
@@ -132,7 +132,7 @@ def generate_image(image_path, models, device, save_path):
     ax1.axis("off")
 
     encountered_classes = set(np.unique(np_seg))
-    legend_handels = [mpatches.Patch(color=np.array([0.0, 0.0, 0.0, 1.0]), label=f"Background")]
+    legend_handels = [mpatches.Patch(color=np.array([0.0, 0.0, 0.0, 1.0]), label="Background")]
     legend_handels += [
         mpatches.Patch(color=no_mask_colormap(CLASS_NUMBER_MAPPING[cls]), label=cls if len(cls) < 60 else cls[:60] + "...")
         for cls in NAMED_CLASSES
@@ -182,7 +182,7 @@ if __name__ == "__main__":
 
     checkpoints = []
     if not args.checkpoint_absolute:
-        assert "DATASET_LOCATION" in os.environ, f"Environment variable DATASET_LOCATION needed for relative checkpoint but not set!"
+        assert "DATASET_LOCATION" in os.environ, "Environment variable DATASET_LOCATION needed for relative checkpoint but not set!"
         base_path = Path(os.environ["DATASET_LOCATION"]) / "GleasonXAI"
         assert base_path.exists(), f"DATASET_LOCATION {base_path.resolve} does not exist!"
 
