@@ -1,4 +1,6 @@
 # Taken from https://github.com/zifuwanggg/JDTLosses/blob/master/losses/jdt_loss.py
+# We tested these loss functions in our project, but they gave mediocre results.
+# We keep them here for reproducibility and for future reference.
 # %%
 
 """
@@ -434,44 +436,3 @@ class SoftDICECorrectAccuSemiMetric(Metric):
         tp, fp, fn = (self.tp, self.fp, self.fn)
         tversky = (tp + self.smooth) / (tp + self.alpha * fp + self.beta * fn + self.smooth)
         return torch.mean(tversky)
-
-
-# %%
-if __name__ == "__main__":
-    c_size = 5
-    chunks = 100
-
-    A = torch.zeros(1, 2, 50, 50)
-    A[:, 0] = 0.00
-    A[:, 0, :25, :25] = 1.0
-
-    A[:, 1] = 1.0
-    A[:, 1, :25, :25] = 0.0
-
-    B = torch.zeros(1, 2, 50, 50)
-    B[:, 0, :25, :25] = 1.0
-    B[:, 1] = 1.0
-    B[:, 1, :25, :25] = 0.0
-
-    # A = torch.rand(c_size*chunks, 10, 50, 50)**5
-    # B = torch.rand(c_size*chunks, 10, 50, 50)**5
-
-    # A = torch.nn.functional.softmax(A, dim=1)
-    # B = torch.nn.functional.softmax(B, dim=1)
-
-    l = JDTLoss(mIoUD=1.0, mIoUI=0.0, mIoUC=0.0, alpha=0.5, beta=0.5, active_classes_mode_soft="ALL")
-
-    A_c = torch.chunk(A, chunks=chunks, dim=0)
-    B_c = torch.chunk(B, chunks=chunks, dim=0)
-
-    print(1 - l(torch.logit(A), B))
-
-    metric = SoftCorrectDICEMetric()
-
-    metric.update(A, B)
-    print(metric.compute())
-    metric.reset()
-
-    for a_c, b_c in zip(A_c, B_c):
-        metric.update(a_c, b_c)
-    print(metric.compute())

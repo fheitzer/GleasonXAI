@@ -1,3 +1,5 @@
+''' This module implements helper classes for the Cross-Entropy and DICE loss functions, to allow passing in the exact same shapes as with the SoftDiceLoss.'''
+
 import torch
 import torch.nn as nn
 from monai.losses.dice import DiceLoss

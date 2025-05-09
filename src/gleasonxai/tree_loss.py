@@ -1,3 +1,5 @@
+"""This module implements the tree_loss in the class :class:`TreeLoss`."""
+
 import copy
 
 import torch
@@ -9,14 +11,17 @@ def tree_level_elements(tree, level, return_subtrees=False):
 
 
 def _tree_level_elements(tree, current_level, desired_level, return_subtrees=False):
-
     if current_level == desired_level:
-
         if isinstance(tree, dict):
             if return_subtrees:
                 subtrees = []
                 for key, sub_tree in tree.items():
-                    subtrees.append((key, _tree_level_elements(sub_tree, current_level + 1, desired_level + 1, return_subtrees=False)))
+                    subtrees.append(
+                        (
+                            key,
+                            _tree_level_elements(sub_tree, current_level + 1, desired_level + 1, return_subtrees=False),
+                        )
+                    )
                 return subtrees
             else:
                 return list(tree.keys())
@@ -25,11 +30,12 @@ def _tree_level_elements(tree, current_level, desired_level, return_subtrees=Fal
         else:
             return tree
     else:
-
         subtree_keys = []
 
         for _, sub_tree in tree.items():
-            subtree_keys.extend(_tree_level_elements(sub_tree, current_level + 1, desired_level, return_subtrees=return_subtrees))
+            subtree_keys.extend(
+                _tree_level_elements(sub_tree, current_level + 1, desired_level, return_subtrees=return_subtrees)
+            )
 
         return subtree_keys
 
@@ -41,7 +47,6 @@ def get_nesting_depth(d):
 
 
 def get_explanation_level_mapping(higher_level, lower_level, label_hierarchy):
-
     assert higher_level <= lower_level
     assert len(label_hierarchy) >= lower_level - 1
 
@@ -56,11 +61,9 @@ def get_explanation_level_mapping(higher_level, lower_level, label_hierarchy):
         one_level_remapping = copy.deepcopy(label_hierarchy[higher_level])
 
         for higher_class, mapped_labels in label_mapping.items():
-
             new_targets = []
 
             for mapped_label in mapped_labels:
-
                 new_mapped_labels = one_level_remapping[mapped_label]
                 new_targets.extend(new_mapped_labels)
 
@@ -70,40 +73,48 @@ def get_explanation_level_mapping(higher_level, lower_level, label_hierarchy):
 
 
 def parse_label_hierarchy(label_hierarchy):
-
     hierarchy_depth = get_nesting_depth(label_hierarchy) + 1
 
-    explanations_per_level = [tree_level_elements(label_hierarchy, l, return_subtrees=False) for l in range(hierarchy_depth)]
-    explanations_per_level_remapping = [tree_level_elements(label_hierarchy, l, return_subtrees=True) for l in range(hierarchy_depth - 1)]
-    explanations_per_level_number_mapping = [{exp: i for i, exp in enumerate(explanations, 1)} for explanations in explanations_per_level]
+    explanations_per_level = [
+        tree_level_elements(label_hierarchy, l, return_subtrees=False) for l in range(hierarchy_depth)
+    ]
+    explanations_per_level_remapping = [
+        tree_level_elements(label_hierarchy, l, return_subtrees=True) for l in range(hierarchy_depth - 1)
+    ]
+    explanations_per_level_number_mapping = [
+        {exp: i for i, exp in enumerate(explanations, 1)} for explanations in explanations_per_level
+    ]
 
     number_remapping_levels = []
 
     for level, remap_dict in enumerate(explanations_per_level_remapping):
-
         # Background is always mapped to background
         remapping = {0: [0]}
 
         for general_exp, fine_grained_exps in remap_dict:
-
             number_general_exp = explanations_per_level_number_mapping[level][general_exp]
-            numbers_fine_grained_exps = [explanations_per_level_number_mapping[level + 1][exp] for exp in fine_grained_exps]
+            numbers_fine_grained_exps = [
+                explanations_per_level_number_mapping[level + 1][exp] for exp in fine_grained_exps
+            ]
 
             remapping[number_general_exp] = numbers_fine_grained_exps
 
         number_remapping_levels.append(remapping)
 
-    return explanations_per_level, explanations_per_level_number_mapping, explanations_per_level_remapping, number_remapping_levels
+    return (
+        explanations_per_level,
+        explanations_per_level_number_mapping,
+        explanations_per_level_remapping,
+        number_remapping_levels,
+    )
 
 
 def remap_label_levels(mask, number_remapping):
-
     aggregated_slices = [torch.sum(mask[:, number_remapping[i], ...], dim=1) for i in range(len(number_remapping))]
     return torch.stack(aggregated_slices, dim=1)
 
 
 def generate_label_hierarchy(mask, number_remappings, start_level=2):
-
     masks = [mask]
 
     for level in range(start_level - 1, -1, -1):
@@ -115,7 +126,6 @@ def generate_label_hierarchy(mask, number_remappings, start_level=2):
 
 
 class TreeLoss(nn.Module):
-
     __name__ = "TreeLoss"
 
     def __init__(self, level_weights, loss_functions_per_level, numeric_label_remappings=None, **kwargs):
@@ -134,7 +144,6 @@ class TreeLoss(nn.Module):
         return num_classes_per_level
 
     def _get_level_of_input(self, input):
-
         for lvl, num_classes in enumerate(self.num_classes_per_level):
             if num_classes == input.shape[1]:
                 return lvl
@@ -142,7 +151,6 @@ class TreeLoss(nn.Module):
         raise RuntimeError(f"No matching level found with {input.shape[1]} number of classes.")
 
     def forward(self, input: torch.Tensor, target: torch.Tensor):
-
         lvl_of_input = self._get_level_of_input(input)
 
         input_lvls = generate_label_hierarchy(input, self.remappings, lvl_of_input)
@@ -151,7 +159,9 @@ class TreeLoss(nn.Module):
         losses = []
         total_loss = 0.0
 
-        for input_lvl, target_lvl, loss_functions_lvl, lvl_weight in zip(input_lvls, target_lvls, self.loss_functions_per_level, self.weights):
+        for input_lvl, target_lvl, loss_functions_lvl, lvl_weight in zip(
+            input_lvls, target_lvls, self.loss_functions_per_level, self.weights
+        ):
             lvl_losses = []
             lvl_total_loss = 0.0
 

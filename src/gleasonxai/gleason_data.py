@@ -1,6 +1,9 @@
-# %%
+'''
+This module provides the functionality for loading the Gleason dataset.
+The most important export of this file is the :class:`GleasonX` class, which is a subclass of ``torch.utils.data.Dataset``.
+'''
+
 import json
-import os
 import shutil
 import warnings
 from collections import defaultdict
@@ -330,7 +333,7 @@ class GleasonX(torch.utils.data.Dataset):
         else:
             self.background_mask_base_path /= str(tissue_mask_kwargs)
 
-        if scaling == "MicronsCalibrated" and not drawing_order in ["custom_order", "grade_frame_order"]:
+        if scaling == "MicronsCalibrated" and drawing_order not in ["custom_order", "grade_frame_order"]:
             raise RuntimeError("Use grade_frame_order instead")
 
         assert (self.tma_base_path).exists(), f"{self.tma_base_path} should contain the TMAs but does not exist!"
@@ -515,31 +518,3 @@ class GleasonX(torch.utils.data.Dataset):
     def __len__(self):
 
         return len(self.used_slides)
-
-
-class GleasonXClassification(GleasonX):
-
-    def __getitem__(self, idx):
-
-        img, masks, background_mask = super().__getitem__(idx, prepare_torch=False)
-
-        num_annotators = len(masks)
-
-        # Transform into classification
-
-        annotator_annotated_class = np.stack([np.bincount(mask.flatten(), minlength=self.num_classes) for mask in masks], axis=1) > 0
-
-        # Soft Label
-        label = annotator_annotated_class.mean(axis=1)
-
-        # Hard Label
-        # label = annotator_annotated_class.mean(axis=0) >= 0.5
-
-        # Return None for background_mask
-        return tt.functional.to_tensor(img), torch.tensor(label), tt.functional.to_tensor(background_mask)
-
-
-if __name__ == "__main__":
-    data = GleasonX(Path(os.environ["DATASET_LOCATION"] / "GleasonXAI"), "all", transforms=None, label_level=1)
-
-# %%

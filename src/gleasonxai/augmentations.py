@@ -1,9 +1,19 @@
+"""
+This module provides a collection of image augmentation utilities and predefined augmentation strategies 
+using the Albumentations library.
+
+Important Constants:
+----------
+- AUGMENTATIONS:
+    A dictionary mapping augmentation strategy names to their corresponding Albumentations Compose objects. During training they are extracted from there.
+"""
+
 import albumentations as alb
 import numpy as np
 
+
+
 # Crop augmentations
-
-
 def _convert_to_random_scale_tuple(input):
 
     if isinstance(input, (float, int)):

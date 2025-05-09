@@ -1,3 +1,5 @@
+''' This module implements the soft loss functions and metrics. Furthermore, helper functions for the models are implemented.'''
+
 from typing import Literal
 
 import optuna
@@ -37,7 +39,7 @@ def dice_score_hard(pred: torch.Tensor, target: torch.Tensor, average="micro", z
 
     # target is either of shape [C] or of shape [C,H,W]. Add batch dimension.
     if target.dim() in [1, 3]:
-        target = target.unsqueeze(1)
+        target = target.unsqueeze(0)
 
     # Integer encoding of classes. Expand to one-hot.
     if target.size(1) == 1:
@@ -71,7 +73,7 @@ def dice_score_soft(pred: torch.Tensor, target: torch.Tensor, average="micro", z
 
     # target is either of shape [C] or of shape [C,H,W]. Add batch dimension.
     if target.dim() in [1, 3]:
-        target = target.unsqueeze(1)
+        target = target.unsqueeze(0)
 
     # Integer encoding of classes. Expand to one-hot.
     if target.size(1) == 1:

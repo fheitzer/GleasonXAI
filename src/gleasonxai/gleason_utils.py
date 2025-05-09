@@ -120,7 +120,7 @@ def create_composite_plot(data, img, masks, background=None, label_level=None, a
 
     if f is not None:
         if background is not None:
-            legend_handels = [mpatches.Patch(color=np.array([0.0, 0.0, 0.0, 1.0]), label=f"Background")]
+            legend_handels = [mpatches.Patch(color=np.array([0.0, 0.0, 0.0, 1.0]), label="Background")]
             legend_handels += [
                 mpatches.Patch(color=colormap(data.classes_number_mapping[cls] + 1), label=cls if len(cls) < 60 else cls[:60] + "...")
                 for cls in data.classes_named
@@ -154,7 +154,7 @@ def create_single_annotator_segmentation_plot(data, image, seg_mask):
 
     ax.imshow(seg_mask.astype(int), alpha=0.8, cmap=data.colormap, vmin=0, vmax=data.num_classes - 1)
 
-    legend_handels = [mpatches.Patch(color=np.array([0.0, 0.0, 0.0, 1.0]), label=f"Unannotated")]
+    legend_handels = [mpatches.Patch(color=np.array([0.0, 0.0, 0.0, 1.0]), label="Unannotated")]
     legend_handels += [
         mpatches.Patch(color=data.colormap(data.exp_number_mapping[exp]), label=f"{data.exp_grade_mapping[exp]}: " + exp) for exp in data.explanations
     ]
@@ -175,19 +175,13 @@ def create_explanation_visualization(data, annotator_exp_slices, show_individual
     plt.show()
 
 
-def create_segmentation_masks(data, img_index: int, shorter_edge_length=None, img=None, background_mask=None, tissue_mask_kwargs={}, drawing_order="classic"):
+def create_segmentation_masks(data, img_index: int, shorter_edge_length=None, img=None, background_mask=None, tissue_mask_kwargs={}, drawing_order="grade_frame_order"):
 
     slide_df = data.get_slide_df(img_index)
     # Open is a lazy operation, so the incurred cost is low, as long as I dont load it.
 
     if img is None:
         img = data.get_raw_image(img_index)
-
-    annotators_slide = slide_df["annotator"].unique()
-    explanations_slide = slide_df["explanations"].unique()
-
-    images_exp_annotator = {}
-    images_seg_annotator = {}
 
     shorter_edge = min(img.size)
     scale_factor = shorter_edge / shorter_edge_length if shorter_edge_length else 1.0
@@ -206,24 +200,10 @@ def create_segmentation_masks(data, img_index: int, shorter_edge_length=None, im
     if background_mask is None:
         background_mask = ~tissue_filter_image(np.array(img) if not isinstance(img, np.ndarray) else img, size=img_size[::-1], **tissue_mask_kwargs)
 
-    if drawing_order == "frame_order":
-        raise RuntimeError("Drawing order frame_order not recommended. Use grade_frame_order instead")
-        annotator_images = {}
 
-        for annotator, annotator_frame in slide_df.groupby(by="annotator"):
-            annotator_image = np.zeros(list(img_size), dtype=np.int8)  # (H,W)
+    # To maintain back_compatibility with the config files.
+    assert drawing_order == "grade_frame_order", f"Drawing order {drawing_order} is not implemented at the moment. Use grade_frame_order instead"
 
-            for exp, coords in zip(annotator_frame["explanations"], annotator_frame["coords"]):
-                new_coords = np.int32(coords.T * img_size.reshape(-1, 1)[::-1, :])
-                label_slice = np.zeros(list(img_size), dtype=np.int8)
-
-                cv2.fillPoly(label_slice, [new_coords.T], color=1)  # Fill Poly expect (W,H) coordinates and a (H,W,C) numpy image.
-
-                annotator_image[label_slice > 0] = np.array(data.exp_number_mapping[exp])
-
-            annotator_images[annotator] = annotator_image.copy()
-
-        return None, annotator_images, background_mask
 
     if drawing_order == "grade_frame_order":
         annotator_images = {}
@@ -244,86 +224,3 @@ def create_segmentation_masks(data, img_index: int, shorter_edge_length=None, im
             annotator_images[annotator] = annotator_image.copy()
 
         return None, annotator_images, background_mask
-
-    elif drawing_order == "custom_order":
-        raise RuntimeError("Drawing order custom_order not recommended. Use grade_frame_order instead.")
-        annotator_images = {}
-
-        for annotator, annotator_frame in slide_df.groupby(by="annotator"):
-            annotator_image = np.zeros(list(img_size), dtype=np.int8)  # (H,W)
-
-            exp_groups = annotator_frame.groupby("explanations", observed=True)
-            custom_order = {
-                0: ["3", "4", "5"],
-                1: [
-                    "variable sized well-formed individual and discrete glands",
-                    "compressed or angular discrete glands",
-                    "poorly formed and fused glands",
-                    "Cribriform glands",
-                    "Glomeruloid glands",
-                    "solid groups of tumor cells",
-                    "cords",
-                    "single cells",
-                    "presence of comedonecrosis",
-                ],
-            }
-            custom_order = custom_order[data.label_level]
-
-            for exp in custom_order:
-
-                if exp in exp_groups.groups:
-                    annotator_exp_frame = exp_groups.get_group(exp)
-                else:
-                    continue
-
-                for coords in annotator_exp_frame["coords"]:
-
-                    new_coords = np.int32(coords.T * img_size.reshape(-1, 1)[::-1, :])
-                    label_slice = np.zeros(list(img_size), dtype=np.int8)  # (H,W)
-
-                    cv2.fillPoly(label_slice, [new_coords.T], color=1)
-                    annotator_image[label_slice > 0] = np.array(data.exp_number_mapping[exp])
-
-            annotator_images[annotator] = annotator_image.copy()
-
-        return None, annotator_images, background_mask
-
-    elif drawing_order == "classic":
-        raise RuntimeError("Drawing order classic not recommended. Use grade_frame_order instead.")
-
-        for exp, exp_frame in slide_df.groupby(by="explanations", observed=True):
-
-            images_exp_annotator[exp] = {}
-
-            num_annotators_per_exp = exp_frame["annotator"].nunique()
-
-            for annotator, annotator_exp_frame in exp_frame.groupby(by="annotator"):
-
-                annotator_exp_slice = np.zeros(list(img_size), dtype=np.int8)  # (H,W)
-
-                for coords in annotator_exp_frame["coords"]:
-
-                    new_coords = np.int32(coords.T * img_size.reshape(-1, 1)[::-1, :])
-                    label_slice = np.zeros(list(img_size), dtype=np.int8)  # (H,W)
-
-                    cv2.fillPoly(label_slice, [new_coords.T], color=1)
-
-                    annotator_exp_slice += label_slice
-
-                annotator_exp_slice = annotator_exp_slice > 0
-                images_exp_annotator[exp][annotator] = annotator_exp_slice.copy()
-
-        for annotator in annotators_slide:
-
-            relevant_images = [(exp, img) for (exp, exp_images) in images_exp_annotator.items() for (anno, img) in exp_images.items() if anno == annotator]
-
-            relevant_images = sorted(relevant_images, key=lambda x: (data.exp_grade_mapping[x[0]], x))
-
-            seg_mask = np.zeros((*img_size,), dtype=np.int8)
-            for exp, rel_img in relevant_images:
-
-                seg_mask[rel_img] = np.array(data.exp_number_mapping[exp])
-
-            images_seg_annotator[annotator] = seg_mask.copy()
-
-        return images_exp_annotator, images_seg_annotator, background_mask

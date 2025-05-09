@@ -1,4 +1,7 @@
-# %%
+"""This module defines the LitSegmenter and LitClassifier classes, which are PyTorch Lightning modules for training and evaluating segmentation and classification models, respectively.
+The module also includes utility functions for initializing metrics, logging metrics, and defining loss functions.
+"""
+
 from collections import defaultdict
 from typing import Any, Literal
 
@@ -9,37 +12,35 @@ import torchvision
 from monai.inferers import SlidingWindowInferer
 from pytorch_lightning import LightningModule
 from torchmetrics import Dice
-from torchmetrics.classification import (MulticlassConfusionMatrix,
-                                         MulticlassF1Score)
-from torchmetrics.classification.accuracy import (MulticlassAccuracy,
-                                                  MultilabelAccuracy)
+from torchmetrics.classification import MulticlassConfusionMatrix, MulticlassF1Score
+from torchmetrics.classification.accuracy import MulticlassAccuracy, MultilabelAccuracy
 from torchmetrics.classification.auroc import MulticlassAUROC
-from torchmetrics.classification.average_precision import \
-    MulticlassAveragePrecision
+from torchmetrics.classification.average_precision import MulticlassAveragePrecision
 from torchmetrics.classification.calibration_error import MulticlassCalibrationError
 
-from src import jdt_losses
+from . import jdt_losses, model_utils
 
-from . import model_utils
 
 METRIC_MODE = {"val_loss": "min", "val_f1": "max", "val_b_acc": "max", "val_acc": "max"}
 
 
 def initialize_torchmetrics(nn_module, num_classes, max_num_datasets=1, metrics="all"):
-
     if metrics == "all" or "accuracy" in metrics:
         nn_module.accuracy = nn.ModuleDict(
             {
-                step: nn.ModuleList([MulticlassAccuracy(num_classes=num_classes, average="micro") for _ in range(max_num_datasets)])
+                step: nn.ModuleList(
+                    [MulticlassAccuracy(num_classes=num_classes, average="micro") for _ in range(max_num_datasets)]
+                )
                 for step in ["train_split", "val_split", "test_split"]
             }
         )
 
     if metrics == "all" or "b_accuracy" in metrics:
-
         nn_module.b_accuracy = nn.ModuleDict(
             {
-                step: nn.ModuleList([MulticlassAccuracy(num_classes=num_classes, average="macro") for _ in range(max_num_datasets)])
+                step: nn.ModuleList(
+                    [MulticlassAccuracy(num_classes=num_classes, average="macro") for _ in range(max_num_datasets)]
+                )
                 for step in ["train_split", "val_split", "test_split"]
             }
         )
@@ -47,13 +48,14 @@ def initialize_torchmetrics(nn_module, num_classes, max_num_datasets=1, metrics=
     if "multilabel_accuracy" in metrics:
         nn_module.multilabel_accuracy = nn.ModuleDict(
             {
-                step: nn.ModuleList([MultilabelAccuracy(num_labels=num_classes, average="macro") for _ in range(max_num_datasets)])
+                step: nn.ModuleList(
+                    [MultilabelAccuracy(num_labels=num_classes, average="macro") for _ in range(max_num_datasets)]
+                )
                 for step in ["train_split", "val_split", "test_split"]
             }
         )
 
     if metrics == "all" or "DICE" in metrics:
-
         nn_module.DICE = nn.ModuleDict(
             {
                 step: nn.ModuleList([Dice(num_classes=num_classes, average="micro") for _ in range(max_num_datasets)])
@@ -62,7 +64,6 @@ def initialize_torchmetrics(nn_module, num_classes, max_num_datasets=1, metrics=
         )
 
     if metrics == "all" or "b_DICE" in metrics:
-
         nn_module.b_DICE = nn.ModuleDict(
             {
                 step: nn.ModuleList([Dice(num_classes=num_classes, average="macro") for _ in range(max_num_datasets)])
@@ -71,25 +72,26 @@ def initialize_torchmetrics(nn_module, num_classes, max_num_datasets=1, metrics=
         )
 
     if metrics == "all" or "soft_DICE" in metrics:
-
         nn_module.soft_DICE = nn.ModuleDict(
             {
-                step: nn.ModuleList([jdt_losses.SoftCorrectDICEMetric(average="mIoUD") for _ in range(max_num_datasets)])
+                step: nn.ModuleList(
+                    [jdt_losses.SoftCorrectDICEMetric(average="mIoUD") for _ in range(max_num_datasets)]
+                )
                 for step in ["train_split", "val_split", "test_split"]
             }
         )
 
     if metrics == "all" or "b_soft_DICE" in metrics:
-
         nn_module.b_soft_DICE = nn.ModuleDict(
             {
-                step: nn.ModuleList([jdt_losses.SoftCorrectDICEMetric(average="mIoUC") for _ in range(max_num_datasets)])
+                step: nn.ModuleList(
+                    [jdt_losses.SoftCorrectDICEMetric(average="mIoUC") for _ in range(max_num_datasets)]
+                )
                 for step in ["train_split", "val_split", "test_split"]
             }
         )
 
     if metrics == "all" or "soft_DICE" in metrics:
-
         nn_module.soft_DICEDataset = nn.ModuleDict(
             {
                 step: nn.ModuleList([jdt_losses.SoftDICECorrectAccuSemiMetric() for _ in range(max_num_datasets)])
@@ -98,53 +100,73 @@ def initialize_torchmetrics(nn_module, num_classes, max_num_datasets=1, metrics=
         )
 
     if metrics == "all" or "L1" in metrics:
-
         nn_module.L1 = nn.ModuleDict(
-            {step: nn.ModuleList([model_utils.L1CalibrationMetric() for _ in range(max_num_datasets)]) for step in ["train_split", "val_split", "test_split"]}
+            {
+                step: nn.ModuleList([model_utils.L1CalibrationMetric() for _ in range(max_num_datasets)])
+                for step in ["train_split", "val_split", "test_split"]
+            }
         )
 
     if metrics == "all" or "conf_matrix" in metrics:
-
         nn_module.conf_matrix = nn.ModuleDict(
             {
-                step: nn.ModuleList([MulticlassConfusionMatrix(num_classes=num_classes, normalize=None) for _ in range(max_num_datasets)])
+                step: nn.ModuleList(
+                    [
+                        MulticlassConfusionMatrix(num_classes=num_classes, normalize=None)
+                        for _ in range(max_num_datasets)
+                    ]
+                )
                 for step in ["train_split", "val_split", "test_split"]
             }
         )
 
     if metrics == "all" or "f1_score" in metrics:
-
         nn_module.f1_score = nn.ModuleDict(
             # Compute F1 Score only for tumor class
-            {step: nn.ModuleList([MulticlassF1Score(num_classes) for _ in range(max_num_datasets)]) for step in ["train_split", "val_split", "test_split"]}
+            {
+                step: nn.ModuleList([MulticlassF1Score(num_classes) for _ in range(max_num_datasets)])
+                for step in ["train_split", "val_split", "test_split"]
+            }
         )
 
     if metrics == "all" or "auroc" in metrics:
-
         # Only in val and test split
         nn_module.auroc = nn.ModuleDict(
             # Compute AUROC only for tumor class
             {
-                step: nn.ModuleList([MulticlassAUROC(num_classes=2 if num_classes == 2 else num_classes, average="macro") for _ in range(max_num_datasets)])
+                step: nn.ModuleList(
+                    [
+                        MulticlassAUROC(num_classes=2 if num_classes == 2 else num_classes, average="macro")
+                        for _ in range(max_num_datasets)
+                    ]
+                )
                 for step in ["val_split", "test_split"]
             }
         )
 
     if metrics == "all" or "avg_prec" in metrics:
-
         nn_module.avg_prec = nn.ModuleDict(
             # Compute AvgPREC Score only for tumor class
             {
-                step: nn.ModuleList([MulticlassAveragePrecision(num_classes=num_classes, average="macro") for _ in range(max_num_datasets)])
+                step: nn.ModuleList(
+                    [
+                        MulticlassAveragePrecision(num_classes=num_classes, average="macro")
+                        for _ in range(max_num_datasets)
+                    ]
+                )
                 for step in ["train_split", "val_split", "test_split"]
             }
         )
 
     if metrics == "all" or "ece" in metrics:
-
         nn_module.ece = nn.ModuleDict(
             {
-                step: nn.ModuleList([MulticlassCalibrationError(num_classes=num_classes, n_bins=20, norm="l1") for _ in range(max_num_datasets)])
+                step: nn.ModuleList(
+                    [
+                        MulticlassCalibrationError(num_classes=num_classes, n_bins=20, norm="l1")
+                        for _ in range(max_num_datasets)
+                    ]
+                )
                 for step in ["train_split", "val_split", "test_split"]
             }
         )
@@ -166,33 +188,38 @@ def log_metrics(l_model, split, d_idx, logits, y, losses):
     preds = torch.argmax(sm, dim=1)
 
     if "loss" in l_model.metrics_to_track:
-
         for loss_name, loss in losses.items():
-
             loss_str = f"{split}_loss"
             loss_str = loss_str + "_" + loss_name if loss_name != "loss" else loss_str
 
             l_model.log(
-                loss_str, loss, on_step=True if loss_name in ["loss", "KL"] else False, on_epoch=True, prog_bar=True if loss_name in ["loss", "KL"] else False
+                loss_str,
+                loss,
+                on_step=True if loss_name in ["loss", "KL"] else False,
+                on_epoch=True,
+                prog_bar=True if loss_name in ["loss", "KL"] else False,
             )
 
     use_unique_max = l_model.use_unique_max
 
     if use_unique_max:
-
         label_max = torch.max(y, dim=1)[0]
         duplicated_max = torch.sum(y == label_max.unsqueeze(1), dim=1) > 1
         unique_max = ~duplicated_max
 
         if unique_max.sum() > 0:
-
             preds = preds[unique_max]
             y_one_hot = y_one_hot[unique_max]
 
             if "accuracy" in l_model.metrics_to_track:
-
                 l_model.accuracy[split_nn_dict][d_idx](preds, y_one_hot)
-                l_model.log(f"{split}_acc_unique_max", l_model.accuracy[split_nn_dict][d_idx], on_step=False, on_epoch=True, prog_bar=False)
+                l_model.log(
+                    f"{split}_acc_unique_max",
+                    l_model.accuracy[split_nn_dict][d_idx],
+                    on_step=False,
+                    on_epoch=True,
+                    prog_bar=False,
+                )
 
             if "b_accuracy" in l_model.metrics_to_track:
                 l_model.b_accuracy[split_nn_dict][d_idx](preds, y_one_hot)
@@ -206,15 +233,33 @@ def log_metrics(l_model, split, d_idx, logits, y, losses):
 
             if "f1_score" in l_model.metrics_to_track:
                 l_model.f1_score[split_nn_dict][d_idx](preds, y_one_hot)
-                l_model.log(f"{split}_f1_unique_max", l_model.f1_score[split_nn_dict][d_idx], on_step=False, on_epoch=True, prog_bar=False)
+                l_model.log(
+                    f"{split}_f1_unique_max",
+                    l_model.f1_score[split_nn_dict][d_idx],
+                    on_step=False,
+                    on_epoch=True,
+                    prog_bar=False,
+                )
 
             if "DICE" in l_model.metrics_to_track:
                 l_model.DICE[split_nn_dict][d_idx](preds, y_one_hot)
-                l_model.log(f"{split}_DICE_unique_max", l_model.DICE[split_nn_dict][d_idx], on_step=False, on_epoch=True, prog_bar=False)
+                l_model.log(
+                    f"{split}_DICE_unique_max",
+                    l_model.DICE[split_nn_dict][d_idx],
+                    on_step=False,
+                    on_epoch=True,
+                    prog_bar=False,
+                )
 
             if "b_DICE" in l_model.metrics_to_track:
                 l_model.b_DICE[split_nn_dict][d_idx](preds, y_one_hot)
-                l_model.log(f"{split}_b_DICE_unique_max", l_model.b_DICE[split_nn_dict][d_idx], on_step=False, on_epoch=True, prog_bar=False)
+                l_model.log(
+                    f"{split}_b_DICE_unique_max",
+                    l_model.b_DICE[split_nn_dict][d_idx],
+                    on_step=False,
+                    on_epoch=True,
+                    prog_bar=False,
+                )
     else:
         if "multilabel_accuracy" in l_model.metrics_to_track:
             y_multilabel = y >= 0.5
@@ -233,21 +278,36 @@ def log_metrics(l_model, split, d_idx, logits, y, losses):
 
     if "soft_DICE" in l_model.metrics_to_track:
         l_model.soft_DICE[split_nn_dict][d_idx](sm, y)
-        l_model.log(f"{split}_soft_DICE", l_model.soft_DICE[split_nn_dict][d_idx], on_step=False, on_epoch=True, prog_bar=False)
+        l_model.log(
+            f"{split}_soft_DICE", l_model.soft_DICE[split_nn_dict][d_idx], on_step=False, on_epoch=True, prog_bar=False
+        )
 
     if "b_soft_DICE" in l_model.metrics_to_track:
         l_model.b_soft_DICE[split_nn_dict][d_idx](sm, y)
-        l_model.log(f"{split}_b_soft_DICE", l_model.b_soft_DICE[split_nn_dict][d_idx], on_step=False, on_epoch=True, prog_bar=False)
+        l_model.log(
+            f"{split}_b_soft_DICE",
+            l_model.b_soft_DICE[split_nn_dict][d_idx],
+            on_step=False,
+            on_epoch=True,
+            prog_bar=False,
+        )
 
     if "soft_DICE" in l_model.metrics_to_track:
         l_model.soft_DICEDataset[split_nn_dict][d_idx](sm, y)
-        l_model.log(f"{split}_soft_DICEDataset", l_model.soft_DICEDataset[split_nn_dict][d_idx], on_step=False, on_epoch=True, prog_bar=False)
+        l_model.log(
+            f"{split}_soft_DICEDataset",
+            l_model.soft_DICEDataset[split_nn_dict][d_idx],
+            on_step=False,
+            on_epoch=True,
+            prog_bar=False,
+        )
 
     if "L1" in l_model.metrics_to_track:
         l_model.L1[split_nn_dict][d_idx](sm, y)
         l_model.log(f"{split}_L1", l_model.L1[split_nn_dict][d_idx], on_step=False, on_epoch=True, prog_bar=False)
 
 
+# Lookup table for loss functions, so we can use named shortforms.
 LIT_SEGMENTER_LOSS_FUNCTIONS = {
     "CE": F.cross_entropy,
     "DICE": lambda out, y: model_utils.dice_loss_soft(out, y),
@@ -256,7 +316,6 @@ LIT_SEGMENTER_LOSS_FUNCTIONS = {
 
 
 class LitSegmenter(LightningModule):
-
     def __init__(
         self,
         model: torch.nn.Module,
@@ -362,7 +421,6 @@ class LitSegmenter(LightningModule):
         if loss:
             loss = 0.0
             for loss_function, weight in self.loss_functions:
-
                 loss_name = self._get_loss_function_name(loss_function=loss_function)
 
                 sub_loss = loss_function(out, y)
@@ -393,7 +451,6 @@ class LitSegmenter(LightningModule):
         return predictions
 
     def test_step(self, batch, batch_idx: int, dataloader_idx: int = 0):
-
         if self.label_remapper is not None:
             if isinstance(self.label_remapper, (list, tuple, dict)):
                 label_remapper = self.label_remapper[dataloader_idx]
@@ -413,10 +470,8 @@ class LitSegmenter(LightningModule):
         self.predictions.clear()
 
     def on_test_epoch_end(self):
-
         if self.save_predictions:
             for data_idx, full_logits in self.predictions.items():
-
                 # logits = [out["logits"] for out in logged_outputs]
                 # label = [out["label"] for out in logged_outputs]
 
@@ -443,13 +498,24 @@ class LitSegmenter(LightningModule):
         # return {"softmax": out_sm, "label": y}
 
     def configure_optimizers(self):
-
-        optimizers = torch.optim.AdamW(self.parameters(), lr=self.hparams["lr"], weight_decay=self.hparams["weight_decay"])
+        optimizers = torch.optim.AdamW(
+            self.parameters(), lr=self.hparams["lr"], weight_decay=self.hparams["weight_decay"]
+        )
 
         patience = self.hparams["patience"]
 
+        mode = self.hparams["direction"]
+        if mode == "minimize":
+            mode = "min"
+        elif mode == "maximize":
+            mode = "max"
+        else:
+            raise ValueError(f"Unknown mode: {mode}. Please use 'minimize' or 'maximize'.")
+
         if patience > 0:
-            lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizers, mode=self.hparams["direction"], patience=self.hparams["patience"])
+            lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                optimizers, mode=mode, patience=self.hparams["patience"]
+            )
 
             lr_schedulers = {
                 # REQUIRED: The scheduler instance
@@ -488,7 +554,6 @@ class LitSegmenter(LightningModule):
 
 
 def efficientnet(size, classes, weights="IMAGENET1K_V1"):
-
     net = getattr(torchvision.models, f"efficientnet_b{int(size)}")(weights=weights)
 
     net.classifier[1] = nn.Linear(net.classifier[1].in_features, classes)
@@ -497,9 +562,7 @@ def efficientnet(size, classes, weights="IMAGENET1K_V1"):
 
 
 class LitClassifier(LitSegmenter):
-
     def evaluate(self, batch, loss=True):
-
         x, y, _ = batch
         out = self.forward(x)
         if isinstance(out, list):
@@ -512,7 +575,6 @@ class LitClassifier(LitSegmenter):
         if loss:
             loss = 0.0
             for loss_function, weight in self.loss_functions:
-
                 loss_name = self._get_loss_function_name(loss_function=loss_function)
 
                 sub_loss = loss_function(out, y)
