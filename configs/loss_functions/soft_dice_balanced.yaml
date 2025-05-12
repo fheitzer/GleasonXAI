@@ -1,2 +1,2 @@
-_target_: src.model_utils.SoftDiceLoss
+_target_: gleasonxai.model_utils.SoftDiceLoss
 average: "macro"

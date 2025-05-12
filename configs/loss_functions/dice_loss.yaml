@@ -1,4 +1,4 @@
-_target_: src.loss_functions.OneHotDICE
+_target_: gleasonxai.loss_functions.OneHotDICE
 softmax: true
 to_onehot_y: true
 batch: true

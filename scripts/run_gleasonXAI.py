@@ -166,12 +166,12 @@ if __name__ == "__main__":
 
     parse = argparse.ArgumentParser()
 
-    parse.add_argument("--images")
+    parse.add_argument("--images", default=os.environ.get("DATASET_LOCATION", "")+"/GleasonXAI/", help="Path to the image or directory with images")
     parse.add_argument("--checkpoint_absolute", action="store_true")
     parse.add_argument("--checkpoint_1", default="GleasonFinal2/label_level1/SoftDiceBalanced-1/version_0/checkpoints/best_model.ckpt")
     parse.add_argument("--checkpoint_2", default="GleasonFinal2/label_level1/SoftDiceBalanced-2/version_0/checkpoints/best_model.ckpt")
     parse.add_argument("--checkpoint_3", default="GleasonFinal2/label_level1/SoftDiceBalanced-3/version_0/checkpoints/best_model.ckpt")
-    parse.add_argument("--save_path")
+    parse.add_argument("--save_path", default="./.tmp", help="Path to the output directory")
 
     args = parse.parse_args()
 

@@ -1,4 +1,4 @@
-_target_: src.gleason_data.GleasonX
+_target_: gleasonxai.gleason_data.GleasonX
 path: ${oc.env:DATASET_LOCATION}/GleasonXAI
 scaling: "MicronsCalibrated"
 label_level: 1

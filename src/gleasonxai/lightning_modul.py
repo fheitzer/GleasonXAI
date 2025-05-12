@@ -509,6 +509,8 @@ class LitSegmenter(LightningModule):
             mode = "min"
         elif mode == "maximize":
             mode = "max"
+        elif mode in ["min", "max"]:
+            pass
         else:
             raise ValueError(f"Unknown mode: {mode}. Please use 'minimize' or 'maximize'.")
 
