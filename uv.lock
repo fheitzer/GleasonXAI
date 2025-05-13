@@ -494,6 +494,7 @@ dependencies = [
     { name = "pandas" },
     { name = "pillow" },
     { name = "pytorch-lightning" },
+    { name = "pytorchcv" },
     { name = "requests" },
     { name = "scikit-image" },
     { name = "scikit-learn" },
@@ -530,6 +531,7 @@ requires-dist = [
     { name = "pandas", specifier = "===2.1.1" },
     { name = "pillow", specifier = "===9.5.0" },
     { name = "pytorch-lightning", specifier = "===2.1.3" },
+    { name = "pytorchcv", specifier = ">=0.0.73" },
     { name = "requests", specifier = ">=2.32.3" },
     { name = "scikit-image", specifier = "===0.22.0" },
     { name = "scikit-learn", specifier = "===1.3.2" },
@@ -1510,6 +1512,21 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/20/38/2583076edbe2813d276cdb1391e25be6a5281a5e748d3bf02d19e8d6480a/pytorch-lightning-2.1.3.tar.gz", hash = "sha256:2500b002fa09cb37b0e12f879876bf30a2d260b0f04783d33264dab175f0c966", size = 594970 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f6/95/a662bd12b255ee3b59c975277c67398410b5810ee72ff11e34134e10cc9a/pytorch_lightning-2.1.3-py3-none-any.whl", hash = "sha256:03ed186035a230b161130e0d8ecf1dd6657ff7e3f1520e9257b0db7650f9aeea", size = 777659 },
+]
+
+[[package]]
+name = "pytorchcv"
+version = "0.0.73"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "requests" },
+    { name = "torch" },
+    { name = "torchvision" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/77/3d/9821924edd26cd3bc91292200b5e95ed83f941a973325beacc0e956dc2e3/pytorchcv-0.0.73.tar.gz", hash = "sha256:dff0a24dd982910034ce0c1eaafd2277f70c292c3a2bff9e5b90f09f38921186", size = 411631 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9a/f5/988a84e68ef19f9269510fef5e97d5bdffef8d6c6837540234ed55b8da9f/pytorchcv-0.0.73-py2.py3-none-any.whl", hash = "sha256:ffc677cad373949529b226b9688137d4e8506adf835acf4eea160268b872c581", size = 585184 },
 ]
 
 [[package]]
