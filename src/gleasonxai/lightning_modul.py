@@ -2,7 +2,7 @@
 The module also includes utility functions for initializing metrics, logging metrics, and defining loss functions.
 """
 
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
 from typing import Any, Literal
 
 import torch
@@ -384,6 +384,8 @@ class LitSegmenter(LightningModule):
 
         if isinstance(out, list):
             out = out[0]
+        elif isinstance(out, OrderedDict):
+            out = out["out"]
 
         if label_remapper is not None:
             out = label_remapper(out)

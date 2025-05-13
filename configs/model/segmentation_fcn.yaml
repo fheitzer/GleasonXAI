@@ -1,0 +1,2 @@
+_target_: torchvision.models.segmentation.fcn_resnet50
+backbone_weights: torchvision.models.ResNet50_Weights.IMAGENET1K_V1

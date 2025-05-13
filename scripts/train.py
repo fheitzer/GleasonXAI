@@ -17,14 +17,15 @@ from gleasonxai.model_utils import LabelRemapper, PatchedOptunaCallback
 
 
 def train(cfg: DictConfig, trial=None):
-
     BATCH_SIZE = cfg.dataloader.batch_size
     NUM_WORKERS = cfg.dataloader.num_workers
     EFFECTIVE_BATCH_SIZE = cfg.dataloader.effective_batch_size
     assert EFFECTIVE_BATCH_SIZE % BATCH_SIZE == 0
     ACCUMULATION_STEPS = EFFECTIVE_BATCH_SIZE // BATCH_SIZE
     # Was previously always defined for batch_size = 2. We now scale it proportional to the effective batchsize.
-    LR = min(cfg.optimization.lr * EFFECTIVE_BATCH_SIZE / 2, 1e-3)  # Clip it to stable region. Found out through super hard to debug bug.
+    LR = min(
+        cfg.optimization.lr * EFFECTIVE_BATCH_SIZE / 2, 1e-3
+    )  # Clip it to stable region. Found out through super hard to debug bug.
     WEIGHT_DECAY = cfg.optimization.weight_decay
     PATIENCE = cfg.optimization.patience
     MAX_EPOCHS = cfg.trainer.max_epochs
@@ -65,10 +66,26 @@ def train(cfg: DictConfig, trial=None):
 
     NUM_CLASSES = dataset.num_classes
 
-    dataloader_train = DataLoader(dataset=dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=NUM_WORKERS, pin_memory=False, persistent_workers=True)
-    dataloader_val = DataLoader(dataset=dataset_val, batch_size=BATCH_SIZE, shuffle=False, num_workers=NUM_WORKERS, pin_memory=False, persistent_workers=True)
+    dataloader_train = DataLoader(
+        dataset=dataset,
+        batch_size=BATCH_SIZE,
+        shuffle=True,
+        num_workers=NUM_WORKERS,
+        pin_memory=False,
+        persistent_workers=True,
+    )
+    dataloader_val = DataLoader(
+        dataset=dataset_val,
+        batch_size=BATCH_SIZE,
+        shuffle=False,
+        num_workers=NUM_WORKERS,
+        pin_memory=False,
+        persistent_workers=True,
+    )
 
-    net = hydra.utils.instantiate(cfg.model, classes=NUM_CLASSES)
+    num_class_key = "num_classes" if "torchvision" in cfg.model["_target_"] else "classes"
+    num_class_key = {num_class_key: NUM_CLASSES}
+    net = hydra.utils.instantiate(cfg.model, **num_class_key)
 
     loss_functions = hydra.utils.instantiate(cfg.loss_functions)
 
@@ -109,12 +126,20 @@ def train(cfg: DictConfig, trial=None):
 
     logger = [TensorBoardLogger(LOG_DIR, name=EXPERIMENT_NAME, sub_dir="logs")]
 
-    LOG_WANDB = False
+    # LOG_WANDB = False
     if LOG_WANDB:
-        wandb.init(project="GleasonXAI", config=OmegaConf.to_container(cfg, resolve=False), name=EXPERIMENT_NAME, group=EXPERIMENT_NAME[:-2], reinit=True)
+        wandb.init(
+            project="GleasonXAI",
+            config=OmegaConf.to_container(cfg, resolve=False),
+            name=EXPERIMENT_NAME,
+            group=EXPERIMENT_NAME[:-2],
+            reinit=True,
+        )
         logger += [WandbLogger(save_dir=str(LOG_DIR / "wandb"))]
 
-    model_checkpoint = ModelCheckpoint(monitor=SAVE_METRIC, auto_insert_metric_name=True, save_last=True, save_top_k=1, mode=DIRECTION_SHORT)
+    model_checkpoint = ModelCheckpoint(
+        monitor=SAVE_METRIC, auto_insert_metric_name=True, save_last=True, save_top_k=1, mode=DIRECTION_SHORT
+    )
 
     callbacks = []
     if SAVE_MODEL_CHECKPOINTS:
@@ -157,24 +182,28 @@ def train(cfg: DictConfig, trial=None):
     dataset_test = hydra.utils.instantiate(cfg.dataset, split="test", transforms=transforms_test)
 
     remapped_datasets = [
-        hydra.utils.instantiate(cfg.dataset, split="test", transforms=transforms_test, label_level=ll) for ll in range(LABEL_LEVEL - 1, -1, -1)
+        hydra.utils.instantiate(cfg.dataset, split="test", transforms=transforms_test, label_level=ll)
+        for ll in range(LABEL_LEVEL - 1, -1, -1)
     ]
 
-    remappers = {i: LabelRemapper(dataset_test.exp_numbered_lvl_remapping, LABEL_LEVEL, ll) for i, ll in enumerate(range(LABEL_LEVEL - 1, -1, -1), start=1)}
+    remappers = {
+        i: LabelRemapper(dataset_test.exp_numbered_lvl_remapping, LABEL_LEVEL, ll)
+        for i, ll in enumerate(range(LABEL_LEVEL - 1, -1, -1), start=1)
+    }
     remappers[0] = None
     lit_mod.label_remapper = remappers
 
     test_datasets = [dataset_test, *remapped_datasets]
 
     test_dataloaders = [
-        DataLoader(dataset=dataset_test, batch_size=1, shuffle=False, num_workers=NUM_WORKERS, pin_memory=False) for dataset_test in test_datasets
+        DataLoader(dataset=dataset_test, batch_size=1, shuffle=False, num_workers=NUM_WORKERS, pin_memory=False)
+        for dataset_test in test_datasets
     ]
 
     trainer.test(lit_mod, dataloaders=test_dataloaders, ckpt_path=model_checkpoint.best_model_path)
     test_metrics = trainer.callback_metrics
 
     if SAVE_TEST_PREDS:
-
         preds = lit_mod.predictions
 
         pred_save_dir = Path(trainer.log_dir).parent / "preds"
