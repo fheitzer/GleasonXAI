@@ -1,15 +1,3 @@
-"""tests/test_gleasonx.py
-================================
-Comprehensive PyTest suite for `gleasonxai.gleason_data` helpers and dataset
-classes.
-
-All tests are designed to run quickly in CI.  Lightweight unit–tests that do
-not touch the real dataset are grouped first; heavier integration tests which
-rely on the dataset present at
-`Path(os.environ["DATASET_LOCATION"])/"GleasonXAI"` follow and are skipped if
-the data folder is absent.
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -71,7 +59,6 @@ def test_get_class_colormaps_counts():
 @pytest.mark.parametrize("file_format", [".png"])
 def test_reformat_dataset_to_flat_structure(tmp_path: Path, sample_image: Image.Image, monkeypatch, file_format):
     """Images should be copied/converted into the new flat folder."""
-    # Arrange – fake nested folder with a single file
     src_dir = tmp_path / "src"
     nested_dir = src_dir / "nested"
     dst_dir = tmp_path / "dst"
@@ -87,9 +74,7 @@ def test_reformat_dataset_to_flat_structure(tmp_path: Path, sample_image: Image.
 
     monkeypatch.setitem(reformat_dataset_to_flat_structure.__globals__, "load_tmas", _fake_load_tmas)
 
-    # Act
     reformat_dataset_to_flat_structure(src_dir, dst_dir, ".png")
 
-    # Assert
     assert (dst_dir / "sample.png").exists()
 

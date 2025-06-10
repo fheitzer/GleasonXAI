@@ -9,19 +9,14 @@ import torch
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
-from scripts.train import train                       # the function we really want to test
-
+from scripts.train import train
 # ------------------------------------------------------------------------------
 # 1. Fixtures & helpers
 # ------------------------------------------------------------------------------
 
 @pytest.fixture(scope="session")
 def dummy_dataset_cls():
-    """
-    A minimal replacement for gleasonxai.gleason_data.GleasonX.
-    It returns random tensors but exposes the attributes the LightningModule
-    relies on (num_classes, exp_numbered_lvl_remapping, label_level).
-    """
+
     class Dummy(torch.utils.data.Dataset):
         def __init__(self, *_, **__):
             self.num_classes = 2      # Benign vs. Tumour – enough for the model & loss
@@ -43,8 +38,7 @@ def dummy_dataset_cls():
 @pytest.fixture()
 def isolated_env(tmp_path, monkeypatch):
     """
-    Provide fresh folders for EXPERIMENT_LOCATION & DATASET_LOCATION so
-    the training code can write freely without touching the repo.
+    Provide fresh folders for EXPERIMENT_LOCATION
     """
     exp_dir  = tmp_path / "exp"
     exp_dir.mkdir()
@@ -54,13 +48,15 @@ def isolated_env(tmp_path, monkeypatch):
 
 def compose_test_cfg():
     """
-    Load configs/test_config.yaml once, then override only what is required
-    to keep the test fast and self-contained.
+    Load configs once, then override what is required
     """
     hydra.core.global_hydra.GlobalHydra.instance().clear()          # reset between tests
     with hydra.initialize_config_dir(version_base=None, config_dir=str(REPO_ROOT/"configs")):
         cfg = hydra.compose(config_name="config", overrides=["trainer.max_epochs=1",
-                                                              "dataloader.num_workers=1",
+                                                              "dataloader.num_workers=8",
+                                                              "+trainer.limit_train_batches=3",
+                                                              "+trainer.limit_val_batches=3",
+                                                              "+trainer.limit_test_batches=3",
                                                               "dataloader.batch_size=1",
                                                               "dataloader.effective_batch_size=1",
                                                               "trainer.accelerator=cpu",
@@ -87,11 +83,9 @@ def test_train_end_to_end(monkeypatch, isolated_env, dummy_dataset_cls):
 
     cfg = compose_test_cfg()
 
-    # Test passes but takes ages.
-    return True
+    # Training passes but takes ages.
 
     # -------------------------------------------------------------------------
     train(cfg)                            # the call must *not* raise
-
-    # checkpoint should now exist – train.py creates one and symlinks it to
-    #   <EXPERIMENT_LOCATION>/.../checkpoints/best_model.ckpt                :contentReference[oaicite:0]{index=0}
+    assert isolated_env/cfg.experiment/"version_0"/"checkpoints"/"best_model.ckpt".exists()
+    

@@ -5,16 +5,10 @@ from unittest.mock import MagicMock
 import pytest
 import torch
 
-# -----------------------------------------------------------------------------
-# Ensure the project root is on the PYTHONPATH so that ``lightning_modul`` can
-# be imported when the tests are run from any location (e.g. via ``pytest`` at
-# the project root).
-# -----------------------------------------------------------------------------
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-# The module name is *lightning_modul.py* (without the trailing "e")
 from gleasonxai.lightning_modul import LitClassifier, LitSegmenter
 
 # -----------------------------------------------------------------------------
@@ -23,10 +17,6 @@ from gleasonxai.lightning_modul import LitClassifier, LitSegmenter
 
 
 class DummySegModel(torch.nn.Module):
-    """Very small convolutional net that keeps the spatial resolution and
-    changes only the channel dimension. Useful for lightning module smoke
-    tests where we do *not* want to spend time or memory on a large network.
-    """
 
     def __init__(self, num_classes: int = 3):
         super().__init__()
@@ -37,7 +27,6 @@ class DummySegModel(torch.nn.Module):
 
 
 class DummyClsModel(torch.nn.Module):
-    """Tiny classifier: a *1×1* conv followed by global average pooling."""
 
     def __init__(self, num_classes: int = 3):
         super().__init__()
@@ -57,7 +46,6 @@ class DummyClsModel(torch.nn.Module):
 
 @pytest.fixture(scope="module")
 def device():
-    """CPU for the test‑suite; CUDA is optional but not required."""
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 

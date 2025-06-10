@@ -1,15 +1,3 @@
-"""tests/test_gleasonx.py
-================================
-Comprehensive PyTest suite for `gleasonxai.gleason_data` helpers and dataset
-classes.
-
-All tests are designed to run quickly in CI.  Lightweight unit–tests that do
-not touch the real dataset are grouped first; heavier integration tests which
-rely on the dataset present at
-`Path(os.environ["DATASET_LOCATION"])/"GleasonXAI"` follow and are skipped if
-the data folder is absent.
-"""
-
 from __future__ import annotations
 
 import os
@@ -67,9 +55,6 @@ def test_dataset_exists():
 @skip_data
 def test_dataset_basic_properties(gleasonx_dataset):
     """Dataset splits should be non‑empty and mutually exclusive."""
-    # ds_train = GleasonX(DATA_ROOT, split="train", scaling="MicronsCalibrated", create_seg_masks=True, drawing_order="grade_frame_order", explanation_file="final_filtered_explanations_df.csv", data_split=[0.7, 0.15, 0.15], tissue_mask_kwargs={"open":False, "close":False, "flood":False})
-    # ds_val = GleasonX(DATA_ROOT, split="val", scaling="MicronsCalibrated", create_seg_masks=True, drawing_order="grade_frame_order", explanation_file="final_filtered_explanations_df.csv", data_split=[0.7, 0.15, 0.15], tissue_mask_kwargs={"open":False, "close":False, "flood":False})
-    # ds_test = GleasonX(DATA_ROOT, split="test", scaling="MicronsCalibrated", create_seg_masks=True, drawing_order="grade_frame_order", explanation_file="final_filtered_explanations_df.csv", data_split=[0.7, 0.15, 0.15], tissue_mask_kwargs={"open":False, "close":False, "flood":False})
 
     ds_train, ds_val, ds_test = gleasonx_dataset
 
