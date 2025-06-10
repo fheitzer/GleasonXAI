@@ -25,7 +25,7 @@ api = wandb.Api()
 runs = api.runs(
     f"{entity}/{project}",
 )
-runs = [run for run in runs if "GleasonFinal2/" in run.name]
+runs = [run for run in runs if ("GleasonFinal2/" in run.name)]
 # Initialize an empty list to store run data
 run_data = []
 
@@ -46,7 +46,7 @@ for run in runs:
     new_summary = {}
 
     for k, v in summary.items():
-        if not "dataloader_idx_" in k:
+        if "dataloader_idx_" not in k:
             k = k + f"_label_level_{label_level}"
             new_summary[k] = v
 
@@ -371,7 +371,7 @@ for ax in axes.flatten():
     handles, labels = ax.get_legend_handles_labels()
 
     for l, h in zip(labels, handles):
-        if not l in legend_dict:
+        if l not in legend_dict:
             legend_dict[l] = h
 
 fig.legend(list(legend_dict.values()), list(legend_dict.keys()), loc="center", ncol=len(selected_names), bbox_to_anchor=(0.5, 0.03), fontsize=12)
