@@ -1,6 +1,7 @@
 import argparse
 import os
 from pathlib import Path
+import sys
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -14,6 +15,9 @@ from PIL import Image
 from gleasonxai.augmentations import normalize_only_transform
 from gleasonxai.gleason_utils import tissue_filter_image
 from gleasonxai.lightning_modul import LitSegmenter
+# A dirty hack to allow the loading of old checkpoints
+sys.modules["src"] = sys.modules["gleasonxai"]  # Ensure gleasonxai is in the path
+
 
 CLASS_NUMBER_MAPPING = {
     "Benign": 0,
