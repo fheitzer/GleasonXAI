@@ -103,18 +103,49 @@ def load_explanations(path, explanation_file="explanations_df.csv"):
 
     df = pd.read_csv(path / explanation_file)
     df = df.dropna(how="all")
-    df["explanations"] = df["explanations"].astype("category")
+    # Normalize explanations to lowercase to match label_remapping.json format
+    df["explanations"] = df["explanations"].str.lower().astype("category")
 
     return df
 
 
-def postprocess_df(df, tma_paths, exp_lvl_remapping, label_level):
+def postprocess_df(df, tma_paths, exp_lvl_remapping, label_level, german_to_english_mapping=None):
 
     def match_to_tma(tma_identifier):
         return tma_identifier in tma_paths.keys()
 
+    # Create TMA_identifier by stripping file extension from TMA column
+    # The TMA column can have two formats:
+    # 1. Tissue microarray: "PR482a_B2_4.jpeg" where _4 is grade -> "PR482a_B2"
+    # 2. Gleason2019: "slide002_core123_grade3.jpeg" -> "slide002_core123"
+    # The tma_paths keys don't include the grade suffix
+    def extract_tma_info(tma_filename):
+        # Remove file extension to get identifier
+        from pathlib import Path
+        import re
+        identifier = Path(tma_filename).stem
+        # Remove grade suffix patterns:
+        # - Pattern 1: _1 through _5 at the end (tissue microarray)
+        # - Pattern 2: _grade1 through _grade5 at the end (Gleason2019)
+        identifier = re.sub(r'_grade[12345]$', '', identifier)  # Remove _grade[12345]
+        identifier = re.sub(r'_[12345]$', '', identifier)       # Remove _[12345]
+        return identifier
+
+    # OLD CODE which was commented out anyways
     # df[["TMA_identifier", "TMA_path"]] = df["TMA"].apply(
-    #     match_to_tma).apply(pd.Series)
+    #      match_to_tma).apply(pd.Series)
+    
+    df["TMA_identifier"] = df["TMA"].apply(extract_tma_info)
+    
+    # Debug: Check which files cannot be matched
+    unmatched_mask = ~df["TMA_identifier"].apply(match_to_tma)
+    if unmatched_mask.any():
+        unmatched_files = df.loc[unmatched_mask, "TMA_identifier"].unique()
+        print(f"ERROR: {len(unmatched_files)} TMA files could not be matched!")
+        print(f"First 10 unmatched files: {list(unmatched_files[:10])}")
+        print(f"Total TMAs in tma_paths: {len(tma_paths)}")
+        print(f"First 10 TMA keys: {list(tma_paths.keys())[:10]}")
+    
     assert df["TMA_identifier"].apply(match_to_tma).all(), "Some files could not be matched"
 
     # Convert the coordinates of the polygons
@@ -128,6 +159,10 @@ def postprocess_df(df, tma_paths, exp_lvl_remapping, label_level):
     df["coords"] = converted_coords
 
     assert df["coords"].isnull().sum() == 0, "Some coordinates are null."
+
+    # Translate German explanations to English if translation mapping is provided
+    if german_to_english_mapping is not None:
+        df["explanations"] = df["explanations"].replace(german_to_english_mapping)
 
     # Remap explanations with label hierarchy
 
@@ -350,7 +385,10 @@ class GleasonX(torch.utils.data.Dataset):
         except IOError:
             print(f"label hierarchy file {self.path/label_hierarchy_file} does not exist.")
         with open(self.path / label_hierarchy_file, "r") as f:
-            label_mapping = json.load(f)["hierarchy"]
+            label_mapping_full = json.load(f)
+            label_mapping = label_mapping_full["hierarchy"]
+            # Load German to English translation mapping
+            german_to_english_mapping = label_mapping_full.get("translated", {})
 
         self.exp_per_level, self.exp_per_level_numbered, self.exp_lvl_remapping, self.exp_numbered_lvl_remapping = parse_label_hierarchy(label_mapping)
 
@@ -371,7 +409,7 @@ class GleasonX(torch.utils.data.Dataset):
             self.background_paths = background_paths
 
         df = load_explanations(path, explanation_file=explanation_file)
-        df = postprocess_df(df, tma_paths, self.exp_lvl_remapping, label_level)
+        df = postprocess_df(df, tma_paths, self.exp_lvl_remapping, label_level, german_to_english_mapping)
 
         self.transforms = transforms
         self.drawing_order = drawing_order
