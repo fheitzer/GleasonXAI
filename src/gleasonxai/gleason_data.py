@@ -169,22 +169,24 @@ def postprocess_df(df, tma_paths, exp_lvl_remapping, label_level, german_to_engl
         first_line = exp.split('\n')[0]
         # Strip "free text:" prefix (case-insensitive)
         cleaned = re.sub(r'(?i)^free text:\s*', '', first_line)
-        # Strip whitespace and trailing dots
-        cleaned = cleaned.strip().rstrip('.')
+        # Normalize internal whitespace
+        cleaned = re.sub(r'\s+', ' ', cleaned)
+        # Strip trailing dots and leading/trailing whitespace
+        cleaned = cleaned.strip(' .')
         return cleaned
 
     df["explanations"] = df["explanations"].apply(clean_explanation)
 
     # Apply free text mapping to map free text explanations to standard explanations
     if free_text_mapping is not None:
-        # Clean mapping keys to match our cleaning logic (lowercase, no trailing dots)
-        cleaned_free_text_mapping = {k.lower().strip().rstrip('.'): v for k, v in free_text_mapping.items()}
+        # Clean mapping keys to match our cleaning logic (lowercase, normalized whitespace, no trailing dots/spaces)
+        cleaned_free_text_mapping = {clean_explanation(k).lower(): v for k, v in free_text_mapping.items()}
         df["explanations"] = df["explanations"].replace(cleaned_free_text_mapping)
     
     # Translate German explanations to English if translation mapping is provided
     if german_to_english_mapping is not None:
         # Clean translation mapping keys to match our cleaning logic
-        cleaned_german_mapping = {k.lower().strip().rstrip('.'): v for k, v in german_to_english_mapping.items()}
+        cleaned_german_mapping = {clean_explanation(k).lower(): v for k, v in german_to_english_mapping.items()}
         df["explanations"] = df["explanations"].replace(cleaned_german_mapping)
 
     # Remap explanations with label hierarchy
