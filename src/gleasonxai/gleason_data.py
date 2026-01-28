@@ -109,7 +109,7 @@ def load_explanations(path, explanation_file="explanations_df.csv"):
     return df
 
 
-def postprocess_df(df, tma_paths, exp_lvl_remapping, label_level, german_to_english_mapping=None):
+def postprocess_df(df, tma_paths, exp_lvl_remapping, label_level, german_to_english_mapping=None, free_text_mapping=None):
 
     def match_to_tma(tma_identifier):
         return tma_identifier in tma_paths.keys()
@@ -160,6 +160,10 @@ def postprocess_df(df, tma_paths, exp_lvl_remapping, label_level, german_to_engl
 
     assert df["coords"].isnull().sum() == 0, "Some coordinates are null."
 
+    # Apply free text mapping to map free text explanations to standard explanations
+    if free_text_mapping is not None:
+        df["explanations"] = df["explanations"].replace(free_text_mapping)
+    
     # Translate German explanations to English if translation mapping is provided
     if german_to_english_mapping is not None:
         df["explanations"] = df["explanations"].replace(german_to_english_mapping)
@@ -389,6 +393,13 @@ class GleasonX(torch.utils.data.Dataset):
             label_mapping = label_mapping_full["hierarchy"]
             # Load German to English translation mapping
             german_to_english_mapping = label_mapping_full.get("translated", {})
+        
+        # Load free text mapping
+        free_text_mapping_file = "free_text_mapping.json"
+        free_text_mapping = None
+        if (self.path / free_text_mapping_file).exists():
+            with open(self.path / free_text_mapping_file, "r") as f:
+                free_text_mapping = json.load(f)
 
         self.exp_per_level, self.exp_per_level_numbered, self.exp_lvl_remapping, self.exp_numbered_lvl_remapping = parse_label_hierarchy(label_mapping)
 
@@ -409,7 +420,7 @@ class GleasonX(torch.utils.data.Dataset):
             self.background_paths = background_paths
 
         df = load_explanations(path, explanation_file=explanation_file)
-        df = postprocess_df(df, tma_paths, self.exp_lvl_remapping, label_level, german_to_english_mapping)
+        df = postprocess_df(df, tma_paths, self.exp_lvl_remapping, label_level, german_to_english_mapping, free_text_mapping)
 
         self.transforms = transforms
         self.drawing_order = drawing_order
