@@ -160,6 +160,9 @@ def postprocess_df(df, tma_paths, exp_lvl_remapping, label_level, german_to_engl
 
     assert df["coords"].isnull().sum() == 0, "Some coordinates are null."
 
+    # Strip "free text:" prefix from explanations
+    df["explanations"] = df["explanations"].str.replace(r'^free text:\s*', '', regex=True)
+
     # Apply free text mapping to map free text explanations to standard explanations
     if free_text_mapping is not None:
         df["explanations"] = df["explanations"].replace(free_text_mapping)
