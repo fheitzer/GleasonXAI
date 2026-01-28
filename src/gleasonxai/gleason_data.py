@@ -410,8 +410,25 @@ class GleasonX(torch.utils.data.Dataset):
         with open(self.path / label_hierarchy_file, "r") as f:
             label_mapping_full = json.load(f)
             label_mapping = label_mapping_full["hierarchy"]
-            # Load German to English translation mapping
-            german_to_english_mapping = label_mapping_full.get("translated", {})
+            
+            # Load and combine all available mappings
+            translated = label_mapping_full.get("translated", {})
+            german_errors = label_mapping_full.get("german_errors", {})
+            english_errors = label_mapping_full.get("english_errors", {})
+            
+            # Create a unified mapping that resolves all steps to the final English translation
+            german_to_english_mapping = translated.copy()
+            
+            # Add German errors, resolving them to English if their correction exists in 'translated'
+            for error, correction in german_errors.items():
+                if correction in translated:
+                    german_to_english_mapping[error] = translated[correction]
+                else:
+                    german_to_english_mapping[error] = correction
+            
+            # Add English errors
+            for error, correction in english_errors.items():
+                german_to_english_mapping[error] = correction
         
         # Load free text mapping
         free_text_mapping_file = "free_text_mapping.json"
