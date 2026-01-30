@@ -193,7 +193,7 @@ if __name__ == "__main__":
     parse.add_argument("--checkpoint", default="GleasonFinal2/label_level1")
     parse.add_argument("--config")
     parse.add_argument("--no_logging", default=False, action="store_true")
-    parse.add_argument("--glob_checkpoints", default="SoftDiceBalanced*")
+    parse.add_argument("--glob_checkpoints", default=None)
     parse.add_argument("--dry_run", default=False, action="store_true")
     parse.add_argument("--task", default="predict", choices=["test", "predict"])
     parse.add_argument("--save_path")
@@ -235,6 +235,8 @@ if __name__ == "__main__":
 
         if args.config is None:
             config = checkpoint.parents[1] / "logs" / "config.yaml"
+        else:
+            config = Path(args.config)
 
         if args.save_path is None:
 
