@@ -61,11 +61,11 @@ def test(
     # Transforms
     transforms_test = augmentations.AUGMENTATIONS[AUGMENTATION_TEST]
 
-    dataset_test = hydra.utils.instantiate(cfg.dataset, split="test", transforms=transforms_test)
+    dataset_test = hydra.utils.instantiate(cfg.dataset, split=eval_on, transforms=transforms_test)
     NUM_CLASSES = dataset_test.num_classes
 
     remapped_datasets = [
-        hydra.utils.instantiate(cfg.dataset, split="test", transforms=transforms_test, label_level=ll) for ll in range(LABEL_LEVEL - 1, -1, -1)
+        hydra.utils.instantiate(cfg.dataset, split=eval_on, transforms=transforms_test, label_level=ll) for ll in range(LABEL_LEVEL - 1, -1, -1)
     ]
 
     test_datasets = [dataset_test, *remapped_datasets]
