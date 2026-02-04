@@ -1,5 +1,7 @@
 # GleasonXAI Project Rules for Claude Code
 
+Always use uv run --env-file=.env script.py
+
 ## Critical Context
 
 **Project:** Pathologist-like explainable AI for prostate cancer grading (published in Nature Communications 2025)
