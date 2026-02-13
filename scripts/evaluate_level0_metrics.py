@@ -114,6 +114,57 @@ def remap_to_level0(probs_list: list, remapping_dict: Dict[int, list]) -> list:
     return level0_probs
 
 
+def weighted_remap_to_level0(
+    probs_list: list,
+    remapping_dict: Dict[int, list],
+    weights_dict: Dict[int, list]
+) -> list:
+    """
+    Remap level 1 probabilities to level 0 using weighted averaging.
+
+    Args:
+        probs_list: List of level 1 probabilities, each shape (11, H, W)
+        remapping_dict: Dictionary mapping level 0 class -> list of level 1 classes
+                       e.g., {0: [0], 1: [1, 2], 2: [3, 4, 5, 6, 7, 8], 3: [9]}
+        weights_dict: Dictionary mapping level 0 class -> list of weights for each level 1 class
+                     Weights should be normalized (sum to 1) per parent class
+                     e.g., {0: [1.0], 1: [0.6, 0.4], 2: [0.2, 0.15, 0.25, 0.1, 0.2, 0.1], 3: [1.0]}
+
+    Returns:
+        List of level 0 probabilities, each shape (4, H, W)
+
+    Example:
+        >>> remapping_dict = {0: [0], 1: [1, 2], 2: [3, 4, 5, 6, 7, 8], 3: [9]}
+        >>> weights_dict = {0: [1.0], 1: [0.6, 0.4], 2: [0.2, 0.15, 0.25, 0.1, 0.2, 0.1], 3: [1.0]}
+        >>> level0_probs = weighted_remap_to_level0(level1_probs, remapping_dict, weights_dict)
+    """
+    level0_probs = []
+
+    for probs in tqdm(probs_list, desc="Weighted remapping level 1 → level 0"):
+        num_level0_classes = len(remapping_dict)
+        C, H, W = probs.shape
+        level0_prob = torch.zeros((num_level0_classes, H, W), dtype=probs.dtype, device=probs.device)
+
+        for level0_class, level1_classes in remapping_dict.items():
+            weights = weights_dict[level0_class]
+
+            # Validate weights match number of level 1 classes
+            if len(weights) != len(level1_classes):
+                raise ValueError(
+                    f"Level 0 class {level0_class}: {len(weights)} weights provided "
+                    f"but {len(level1_classes)} level 1 classes in mapping. "
+                    f"Weights: {weights}, Level 1 classes: {level1_classes}"
+                )
+
+            # Weighted sum of probabilities
+            for level1_class, weight in zip(level1_classes, weights):
+                level0_prob[level0_class] += weight * probs[level1_class]
+
+        level0_probs.append(level0_prob)
+
+    return level0_probs
+
+
 def apply_thresholds(probs_list: list, thresholds: Dict[int, float]) -> list:
     """Apply per-class thresholds to probabilities."""
     binary_preds_list = []
