@@ -388,6 +388,9 @@ def main():
     # avoids requiring pre-computed segmentation masks on disk)
     def load_labels_via_dataloader(split: str) -> list:
         ds = hydra.utils.instantiate(cfg.dataset, split=split, transforms=transforms_test)
+        
+        # Use batch_size=1 because samples may have different dimensions
+        # (batching fails with variable-sized tensors)
         dl = DataLoader(ds, batch_size=1, shuffle=False,
                         num_workers=args.num_workers, pin_memory=False)
         labels = []
@@ -401,11 +404,22 @@ def main():
         train_labels_l1 = load_labels_via_dataloader("train")
         train_labels_l0 = remap_to_level0(train_labels_l1, remapping_dict)
         print_flush(f"✓ Train labels remapped: {len(train_labels_l0)} samples")
+        
+        # Free memory: delete level 1 labels (no longer needed)
+        del train_labels_l1
+        import gc
+        gc.collect()
 
     print_flush("Loading test labels...")
     test_labels_l1 = load_labels_via_dataloader("test")
     test_labels_l0 = remap_to_level0(test_labels_l1, remapping_dict)
     print_flush(f"✓ Test labels remapped: {len(test_labels_l0)} samples")
+    
+    # Free memory: delete level 1 labels (no longer needed)
+    del test_labels_l1
+    import gc
+    gc.collect()
+    
     print_flush()
 
     num_level0_classes = len(remapping_dict)
@@ -435,6 +449,13 @@ def main():
     test_metrics_equal = evaluate_metrics(test_preds_l0_equal, test_labels_l0, num_level0_classes)
     print_flush(f"Test macro Dice:  {test_metrics_equal['macro_dice']:.4f}")
     print_flush()
+    
+    # Free memory: delete intermediate tensors
+    if not args.skip_train:
+        del train_probs_l0_equal, train_preds_l0_equal
+    del test_probs_l0_equal, test_preds_l0_equal
+    import gc
+    gc.collect()
 
     # ==================================================================
     # STRATEGY 2: THRESHOLD-BASED WEIGHTS (OPTION A)

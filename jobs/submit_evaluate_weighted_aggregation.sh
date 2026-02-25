@@ -38,7 +38,7 @@ THRESHOLD_RESULTS="${CHECKPOINT_PATH}/threshold_evaluation/threshold_results.jso
 DATA_SPLIT="0.9 0.01 0.09"
 
 # Number of workers
-NUM_WORKERS=2
+NUM_WORKERS=1
 
 # Timestamp for logs
 TIMESTAMP="$(date +"%Y-%m-%d_%H-%M-%S")"
@@ -50,8 +50,8 @@ LOG_DIR="${CHECKPOINT_PATH}/cluster_logs/weighted_aggregation_eval_${TIMESTAMP}"
 mkdir -p ${LOG_DIR}
 
 # Job parameters
-GMEM="20G"
-QUEUE="gpu"
+GMEM="39G"
+QUEUE="gpu-pro"
 NUM_GPUS=1
 
 echo "==========================================="
