@@ -1,0 +1,67 @@
+Loading predictions from: /home/f049r/checkpoints/full_data_test/version_8/preds/pred_test.pt
+Loading config from: /home/f049r/checkpoints/full_data_test/version_8/logs/config.yaml
+Output directory: /home/f049r/checkpoints/full_data_test/version_8/threshold_evaluation
+
+================================================================================
+LOADING TEST DATA
+================================================================================
+Loading test labels:   0%|          | 0/91 [00:00<?, ?it/s]Loading test labels:   1%|          | 1/91 [00:00<00:20,  4.45it/s]Loading test labels:   2%|▏         | 2/91 [00:00<00:27,  3.25it/s]Loading test labels:   3%|▎         | 3/91 [00:00<00:29,  3.02it/s]Loading test labels:   7%|▋         | 6/91 [00:01<00:15,  5.36it/s]Loading test labels:   8%|▊         | 7/91 [00:01<00:15,  5.29it/s]Loading test labels:  15%|█▌        | 14/91 [00:01<00:05, 14.62it/s]Loading test labels:  19%|█▊        | 17/91 [00:01<00:06, 12.12it/s]Loading test labels:  21%|██        | 19/91 [00:02<00:06, 10.56it/s]Loading test labels:  25%|██▌       | 23/91 [00:02<00:05, 12.44it/s]Loading test labels:  34%|███▍      | 31/91 [00:02<00:02, 20.99it/s]Loading test labels:  37%|███▋      | 34/91 [00:03<00:03, 14.66it/s]Loading test labels:  41%|████      | 37/91 [00:03<00:04, 13.24it/s]Loading test labels:  48%|████▊     | 44/91 [00:03<00:02, 19.74it/s]Loading test labels:  52%|█████▏    | 47/91 [00:03<00:02, 18.94it/s]Loading test labels:  55%|█████▍    | 50/91 [00:03<00:02, 17.51it/s]Loading test labels:  63%|██████▎   | 57/91 [00:04<00:01, 23.50it/s]Loading test labels:  66%|██████▌   | 60/91 [00:04<00:01, 15.91it/s]Loading test labels:  75%|███████▍  | 68/91 [00:04<00:01, 19.19it/s]Loading test labels:  79%|███████▉  | 72/91 [00:04<00:01, 18.42it/s]Loading test labels:  88%|████████▊ | 80/91 [00:05<00:00, 24.95it/s]Loading test labels:  91%|█████████ | 83/91 [00:05<00:00, 23.57it/s]Loading test labels:  98%|█████████▊| 89/91 [00:05<00:00, 21.82it/s]Loading test labels: 100%|██████████| 91/91 [00:05<00:00, 15.87it/s]
+Number of test samples: 91
+Sample shapes: [torch.Size([10, 512, 512]), torch.Size([10, 981, 925]), torch.Size([10, 920, 920])]
+
+================================================================================
+OPTIMIZING THRESHOLDS
+================================================================================
+Using test set for threshold optimization
+
+Optimizing thresholds using dice metric...
+  Class 0: threshold=0.020, dice=0.8709
+  Class 1: threshold=0.950, dice=0.5493
+  Class 2: threshold=0.120, dice=0.0212
+  Class 3: threshold=0.230, dice=0.4033
+  Class 4: threshold=0.440, dice=0.4088
+  Class 5: threshold=0.010, dice=0.0023
+  Class 6: threshold=0.980, dice=0.2882
+  Class 7: threshold=0.010, dice=0.0000
+  Class 8: threshold=0.510, dice=0.4248
+  Class 9: threshold=0.010, dice=0.0003
+
+================================================================================
+EVALUATING WITH DEFAULT THRESHOLD (0.5)
+================================================================================
+
+Default threshold results:
+  Macro Dice:      0.2413
+  Macro IoU:       0.1534
+  Macro Precision: 0.2506
+  Macro Recall:    0.3018
+
+================================================================================
+EVALUATING WITH OPTIMIZED THRESHOLDS
+================================================================================
+
+Optimized threshold results:
+  Macro Dice:      0.2969
+  Macro IoU:       0.2110
+  Macro Precision: 0.2708
+  Macro Recall:    0.3683
+
+================================================================================
+IMPROVEMENT
+================================================================================
+  Dice        : +0.0556 (+5.56%)
+  Iou         : +0.0575 (+5.75%)
+  Precision   : +0.0201 (+2.01%)
+  Recall      : +0.0664 (+6.64%)
+
+Results saved to /home/f049r/checkpoints/full_data_test/version_8/threshold_evaluation/threshold_results.json
+
+================================================================================
+GENERATING VISUALIZATIONS
+================================================================================
+Threshold visualization saved to /home/f049r/checkpoints/full_data_test/version_8/threshold_evaluation/optimal_thresholds.png
+Metrics comparison saved to /home/f049r/checkpoints/full_data_test/version_8/threshold_evaluation/metrics_comparison.png
+
+================================================================================
+DONE!
+================================================================================
